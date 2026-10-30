@@ -1,0 +1,115 @@
+import { Search, Volume2 } from 'lucide-react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { StrokeOrderStrip } from '../components/StrokeOrderStrip'
+import { StrokeWriter } from '../components/StrokeWriter'
+import { getCharacterPinyin, getEntry, loadIdioms, sanitizeSingleHanzi, speak } from '../lib/dictionary'
+import type { DictionaryEntry, IdiomEntry } from '../types'
+
+const examples = ['春', '学', '家', '爱', '山', '明']
+
+function cleanExplanation(text: string) {
+  return text
+    .replace(/─+—?/g, '')
+    .replace(/\n\s*\n+/g, '\n')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, 8)
+}
+
+export function DictionaryPage() {
+  const [params] = useSearchParams()
+  const navigate = useNavigate()
+  const queryChar = sanitizeSingleHanzi(params.get('q') ?? '') || '春'
+  const [input, setInput] = useState(queryChar)
+  const [entry, setEntry] = useState<DictionaryEntry>()
+  const [idioms, setIdioms] = useState<IdiomEntry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    Promise.all([getEntry(queryChar), loadIdioms()])
+      .then(([nextEntry, idiomIndex]) => {
+        if (!active) return
+        setEntry(nextEntry)
+        setIdioms(idiomIndex[queryChar] ?? [])
+        setNotFound(!nextEntry)
+        setLoading(false)
+      })
+    return () => { active = false }
+  }, [queryChar])
+
+  const readings = useMemo(() => {
+    const value = getCharacterPinyin(queryChar, true)
+    return Array.from(new Set(value.split(/\s+/).filter(Boolean)))
+  }, [queryChar])
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault()
+    const char = sanitizeSingleHanzi(input)
+    if (!char) return
+    navigate(`/dictionary?q=${encodeURIComponent(char)}`)
+  }
+
+  return (
+    <div className="page dictionary-page">
+      <section className="dictionary-intro">
+        <span className="eyebrow">随身小字典</span>
+        <h1>从一笔一画，认识一个字</h1>
+        <p>输入汉字，查读音、部首、笔顺、释义和相关成语。</p>
+        <form className="character-search" onSubmit={submit}>
+          <label className="sr-only" htmlFor="character-input">输入一个汉字</label>
+          <Search aria-hidden="true" />
+          <input id="character-input" value={input} onChange={(event) => setInput(event.target.value)} placeholder="输入一个汉字" inputMode="text" maxLength={8} />
+          <button type="submit">查字</button>
+        </form>
+        <div className="quick-characters" aria-label="常用字快捷查询">
+          <span>试一试</span>
+          {examples.map((char) => <button key={char} onClick={() => navigate(`/dictionary?q=${char}`)}>{char}</button>)}
+        </div>
+      </section>
+
+      {loading ? <div className="loading-state"><i /><span>正在翻字典…</span></div> : notFound ? (
+        <section className="empty-state"><b>{queryChar}</b><h2>这册离线字典里还没有这个字</h2><p>你仍可查看拼音和笔顺，或换一个常用字试试。</p></section>
+      ) : entry && (
+        <>
+          <section className="character-hero" aria-labelledby="character-title">
+            <div className="hero-grid"><span lang="zh">{queryChar}</span></div>
+            <div className="character-summary">
+              <span className="eyebrow">读音</span>
+              <div className="reading-row">
+                <h2 id="character-title">{entry.pinyin || readings.join('、')}</h2>
+                <button className="sound-button" onClick={() => speak(queryChar)} aria-label={`朗读${queryChar}字`}><Volume2 aria-hidden="true" /></button>
+              </div>
+              <dl className="character-facts">
+                <div><dt>部首</dt><dd>{entry.radicals || '未知'}</dd></div>
+                <div><dt>笔画</dt><dd>{entry.strokes || '未知'} 画</dd></div>
+                <div><dt>字形</dt><dd>{entry.oldword && entry.oldword !== queryChar && entry.oldword !== '萵' ? `异体 ${entry.oldword}` : '常用字形'}</dd></div>
+              </dl>
+              {readings.length > 1 && <div className="reading-chips">{readings.map((reading) => <span key={reading}>{reading}</span>)}</div>}
+            </div>
+          </section>
+
+          <div className="learning-grid">
+            <StrokeWriter character={queryChar} />
+            <StrokeOrderStrip character={queryChar} />
+          </div>
+
+          <section className="definition-section" aria-labelledby="definition-title">
+            <div className="section-heading"><div><span className="eyebrow">字典</span><h2 id="definition-title">基本释义</h2></div></div>
+            <div className="definition-copy">{cleanExplanation(entry.explanation).map((line, index) => <p key={`${line}-${index}`}>{line}</p>)}</div>
+          </section>
+
+          <section className="idiom-section" aria-labelledby="idiom-title">
+            <div className="section-heading"><div><span className="eyebrow">用法</span><h2 id="idiom-title">含“{queryChar}”的成语</h2></div><span className="section-count">{idioms.length} 条</span></div>
+            {idioms.length ? <div className="idiom-list">{idioms.map((idiom) => (
+              <details key={idiom.word}><summary><span><b>{idiom.word}</b><small>{idiom.pinyin}</small></span><i aria-hidden="true">＋</i></summary><p>{idiom.explanation}</p></details>
+            ))}</div> : <p className="muted">暂未收录相关成语。</p>}
+          </section>
+        </>
+      )}
+    </div>
+  )
+}

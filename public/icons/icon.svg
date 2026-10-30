@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#f5efe2"/>
+  <rect x="72" y="72" width="368" height="368" rx="48" fill="none" stroke="#b33b2e" stroke-width="16"/>
+  <path d="M256 80v352M80 256h352M86 86l340 340M426 86L86 426" stroke="#b33b2e" stroke-width="6" stroke-dasharray="15 15" opacity=".38"/>
+  <text x="256" y="350" text-anchor="middle" font-size="260" font-family="Kaiti SC,STKaiti,serif" fill="#342b24">字</text>
+</svg>

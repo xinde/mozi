@@ -1,0 +1,10 @@
+/.vscode
+.DS_Store
+__pycache__
+error.csv
+node_modules/
+dist/
+.tmp-cnchar/
+*.tgz
+*.tsbuildinfo
+qa-*.png
