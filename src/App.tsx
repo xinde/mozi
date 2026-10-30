@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/AppShell'
 import { DictionaryPage } from './pages/DictionaryPage'
 import { ReaderPage } from './pages/ReaderPage'
@@ -9,7 +9,7 @@ function NotFound() {
       <span>迷</span>
       <h1>这一页走丢了</h1>
       <p>回到字典，继续认识一个新字。</p>
-      <a className="primary-button" href="/dictionary">回到字典</a>
+      <Link className="primary-button" to="/dictionary">回到字典</Link>
     </div>
   )
 }

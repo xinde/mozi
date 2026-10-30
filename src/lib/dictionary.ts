@@ -8,7 +8,7 @@ let entryMap: Map<string, DictionaryEntry> | undefined
 export const isHanzi = (char: string) => /\p{Script=Han}/u.test(char)
 
 export async function loadDictionary() {
-  dictionaryPromise ??= fetch('/data/dictionary.json').then(async (response) => {
+  dictionaryPromise ??= fetch(`${import.meta.env.BASE_URL}data/dictionary.json`).then(async (response) => {
     if (!response.ok) throw new Error('字典数据加载失败')
     const entries = (await response.json()) as DictionaryEntry[]
     entryMap = new Map(entries.map((entry) => [entry.word, entry]))
@@ -18,7 +18,7 @@ export async function loadDictionary() {
 }
 
 export async function loadIdioms() {
-  idiomsPromise ??= fetch('/data/idioms.json').then(async (response) => {
+  idiomsPromise ??= fetch(`${import.meta.env.BASE_URL}data/idioms.json`).then(async (response) => {
     if (!response.ok) throw new Error('成语数据加载失败')
     return (await response.json()) as IdiomIndex
   })

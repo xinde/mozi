@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  base: '/mozi/',
   plugins: [
     react(),
     VitePWA({
@@ -17,10 +18,11 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait-primary',
         lang: 'zh-CN',
-        start_url: '/',
+        start_url: '/mozi/',
+        scope: '/mozi/',
         icons: [
-          { src: '/icons/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
-          { src: '/icons/maskable.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
+          { src: '/mozi/icons/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          { src: '/mozi/icons/maskable.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
         ],
       },
       workbox: {
@@ -29,7 +31,7 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => url.pathname.startsWith('/data/'),
+            urlPattern: ({ url }) => url.pathname.startsWith('/mozi/data/'),
             handler: 'CacheFirst',
             options: {
               cacheName: 'mozi-dictionary-v1',
