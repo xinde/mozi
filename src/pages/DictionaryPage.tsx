@@ -1,6 +1,8 @@
 import { Search, Volume2 } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { CharacterPopover } from '../components/CharacterPopover'
+import { InlineHanziText } from '../components/InlineHanziText'
 import { StrokeOrderStrip } from '../components/StrokeOrderStrip'
 import { StrokeWriter } from '../components/StrokeWriter'
 import { getCharacterPinyin, getEntry, loadIdioms, sanitizeSingleHanzi, speak } from '../lib/dictionary'
@@ -27,6 +29,7 @@ export function DictionaryPage() {
   const [idioms, setIdioms] = useState<IdiomEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [selectedCharacter, setSelectedCharacter] = useState<string>()
 
   useEffect(() => {
     let active = true
@@ -86,7 +89,7 @@ export function DictionaryPage() {
               <dl className="character-facts">
                 <div><dt>部首</dt><dd>{entry.radicals || '未知'}</dd></div>
                 <div><dt>笔画</dt><dd>{entry.strokes || '未知'} 画</dd></div>
-                <div><dt>字形</dt><dd>{entry.oldword && entry.oldword !== queryChar && entry.oldword !== '萵' ? `异体 ${entry.oldword}` : '常用字形'}</dd></div>
+                <div><dt>结构</dt><dd>{entry.structure || '结构未知'}</dd></div>
               </dl>
               {readings.length > 1 && <div className="reading-chips">{readings.map((reading) => <span key={reading}>{reading}</span>)}</div>}
             </div>
@@ -98,8 +101,8 @@ export function DictionaryPage() {
           </div>
 
           <section className="definition-section" aria-labelledby="definition-title">
-            <div className="section-heading"><div><span className="eyebrow">字典</span><h2 id="definition-title">基本释义</h2></div></div>
-            <div className="definition-copy">{cleanExplanation(entry.explanation).map((line, index) => <p key={`${line}-${index}`}>{line}</p>)}</div>
+            <div className="section-heading"><div><span className="eyebrow">字典 · 点字可查</span><h2 id="definition-title">基本释义</h2></div></div>
+            <div className="definition-copy">{cleanExplanation(entry.explanation).map((line, index) => <p key={`${line}-${index}`}><InlineHanziText text={line} onSelect={setSelectedCharacter} /></p>)}</div>
           </section>
 
           <section className="idiom-section" aria-labelledby="idiom-title">
@@ -110,6 +113,7 @@ export function DictionaryPage() {
           </section>
         </>
       )}
+      {selectedCharacter && <CharacterPopover character={selectedCharacter} onClose={() => setSelectedCharacter(undefined)} />}
     </div>
   )
 }

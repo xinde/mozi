@@ -28,7 +28,7 @@ export default defineConfig({
       workbox: {
         navigateFallbackDenylist: [/^\/data\//],
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,json}'],
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/mozi/data/'),

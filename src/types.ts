@@ -4,6 +4,7 @@ export interface DictionaryEntry {
   strokes: string
   pinyin: string
   radicals: string
+  structure: string
   explanation: string
 }
 
