@@ -6,6 +6,7 @@ import { CharacterPopover } from '../components/CharacterPopover'
 import { InlineHanziText } from '../components/InlineHanziText'
 import { StrokeOrderStrip } from '../components/StrokeOrderStrip'
 import { StrokeWriter } from '../components/StrokeWriter'
+import { splitDefinitionsByReading } from '../lib/definitions'
 import { getCharacterPinyin, getEntry, loadIdioms, sanitizeSingleHanzi, speak } from '../lib/dictionary'
 import { getRadicalDisplay } from '../lib/radicals'
 import type { DictionaryEntry, IdiomEntry } from '../types'
@@ -32,6 +33,7 @@ export function DictionaryPage() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [selectedCharacter, setSelectedCharacter] = useState<string>()
+  const [selectedReading, setSelectedReading] = useState('')
 
   useEffect(() => {
     let active = true
@@ -50,6 +52,11 @@ export function DictionaryPage() {
     const value = getCharacterPinyin(queryChar, true)
     return Array.from(new Set(value.split(/\s+/).filter(Boolean)))
   }, [queryChar])
+  const pronunciationDefinitions = useMemo(
+    () => entry ? splitDefinitionsByReading(queryChar, entry.explanation, readings) : [],
+    [entry, queryChar, readings],
+  )
+  const activeDefinition = pronunciationDefinitions.find((group) => group.reading === selectedReading) ?? pronunciationDefinitions[0]
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -91,7 +98,9 @@ export function DictionaryPage() {
                 <div><dt>结构</dt><dd>{entry.structure || '结构未知'}</dd></div>
                 {entry.oldword && entry.oldword !== queryChar && <div className="variant-fact"><dt>传统字形</dt><dd>{entry.oldword}</dd></div>}
               </dl>
-              {readings.length > 1 && <div className="reading-chips">{readings.map((reading) => <span key={reading}>{reading}</span>)}</div>}
+              {readings.length > 1 && <div className="reading-chips" aria-label="选择读音">{readings.map((reading) => (
+                <button className={(activeDefinition?.reading ?? readings[0]) === reading ? 'active' : ''} key={reading} onClick={() => setSelectedReading(reading)}>{reading}</button>
+              ))}</div>}
             </div>
           </section>
 
@@ -101,8 +110,11 @@ export function DictionaryPage() {
           </div>
 
           <section className="definition-section" aria-labelledby="definition-title">
-            <div className="section-heading"><div><span className="eyebrow">字典 · 点字可查</span><h2 id="definition-title">基本释义</h2></div></div>
-            <div className="definition-copy">{cleanExplanation(entry.explanation).map((line, index) => <p key={`${line}-${index}`}><InlineHanziText text={line} onSelect={setSelectedCharacter} /></p>)}</div>
+            <div className="section-heading"><div><span className="eyebrow">字典 · 点字可查</span><h2 id="definition-title">{activeDefinition ? `${activeDefinition.reading} 的释义` : '基本释义'}</h2></div></div>
+            {pronunciationDefinitions.length > 1 && <div className="definition-reading-tabs" aria-label="切换释义读音">{pronunciationDefinitions.map((group) => (
+              <button className={activeDefinition?.reading === group.reading ? 'active' : ''} key={group.reading} onClick={() => setSelectedReading(group.reading)}>{group.reading}</button>
+            ))}</div>}
+            <div className="definition-copy">{(activeDefinition?.lines ?? cleanExplanation(entry.explanation)).map((line, index) => <p key={`${line}-${index}`}><InlineHanziText text={line} onSelect={setSelectedCharacter} /></p>)}</div>
           </section>
 
           <section className="idiom-section" aria-labelledby="idiom-title">

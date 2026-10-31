@@ -11,9 +11,9 @@ export function QuickStrokeCharacter({ character }: { character: string }) {
     if (!mountRef.current) return
     mountRef.current.innerHTML = ''
     const writer = HanziWriter.create(mountRef.current, character, {
-      width: 76,
-      height: 76,
-      padding: 7,
+      width: 64,
+      height: 64,
+      padding: 6,
       strokeAnimationSpeed: 2,
       delayBetweenStrokes: 80,
       strokeColor: '#342b24',

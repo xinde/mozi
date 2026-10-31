@@ -11,6 +11,7 @@ export function StrokeWriter({ character, size = 220 }: StrokeWriterProps) {
   const mountRef = useRef<HTMLDivElement>(null)
   const writerRef = useRef<HanziWriter | null>(null)
   const [playing, setPlaying] = useState(false)
+  const [paused, setPaused] = useState(false)
   const [speed, setSpeed] = useState<'normal' | 'fast'>('normal')
   const [error, setError] = useState(false)
 
@@ -54,12 +55,18 @@ export function StrokeWriter({ character, size = 220 }: StrokeWriterProps) {
     const writer = writerRef.current
     if (!writer) return
     setPlaying(true)
-    writer.animateCharacter({ onComplete: () => setPlaying(false) })
+    if (paused) {
+      setPaused(false)
+      writer.resumeAnimation()
+      return
+    }
+    writer.animateCharacter({ onComplete: () => { setPlaying(false); setPaused(false) } })
   }
 
   const pause = () => {
     writerRef.current?.pauseAnimation()
     setPlaying(false)
+    setPaused(true)
   }
 
   const reset = () => {
@@ -67,6 +74,7 @@ export function StrokeWriter({ character, size = 220 }: StrokeWriterProps) {
     writerRef.current?.hideCharacter({ duration: 0 })
     writerRef.current?.showCharacter({ duration: 300 })
     setPlaying(false)
+    setPaused(false)
   }
 
   return (
@@ -85,7 +93,7 @@ export function StrokeWriter({ character, size = 220 }: StrokeWriterProps) {
       <div className="stroke-controls">
         <button className="primary-button" onClick={playing ? pause : animate} disabled={error}>
           {playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
-          {playing ? '暂停' : '演示笔顺'}
+          {playing ? '暂停' : paused ? '继续演示' : '演示笔顺'}
         </button>
         <button className="reset-button" onClick={reset} aria-label="重置笔顺">
           <RotateCcw aria-hidden="true" /> 重置
