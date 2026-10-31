@@ -1,4 +1,4 @@
-import { BookOpen, ChevronLeft, Eraser, Sparkles } from 'lucide-react'
+import { BookOpen, ChevronLeft, Eraser, MousePointer2, Sparkles } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { CharacterPopover } from '../components/CharacterPopover'
 import { annotateText } from '../lib/dictionary'
@@ -35,15 +35,20 @@ export function ReaderPage() {
           <button className={`pinyin-switch ${showPinyin ? 'on' : ''}`} onClick={() => setShowPinyin(!showPinyin)} aria-pressed={showPinyin}>拼音</button>
         </header>
         <article className={`annotated-article ${showPinyin ? '' : 'hide-pinyin'}`} lang="zh-CN">
-          <div className="article-mark"><span>读</span><i /></div>
-          <p>
-            {tokens.map((token) => token.char === '\n' ? <br key={token.index} /> : token.isHanzi ? (
+          <header className="article-header">
+            <div className="article-seal" aria-hidden="true">读</div>
+            <div><span className="eyebrow">我的注音读本</span><h1>慢慢读，遇见生字就点一下</h1></div>
+          </header>
+          <div className="reading-guide"><MousePointer2 aria-hidden="true" /><span>每个汉字都可以点按，查看读音、结构和笔顺</span></div>
+          <div className="article-rule" aria-hidden="true"><span>墨字</span></div>
+          <p className="article-copy">
+            {tokens.map((token) => token.char === '\n' ? <span className="paragraph-break" key={token.index} /> : token.isHanzi ? (
               <button className="annotated-char" key={token.index} onClick={() => setSelected(token.char)} aria-label={`${token.char}，${token.pinyin}，点按查看生字卡`}>
                 <ruby>{token.char}<rt>{token.pinyin}</rt></ruby>
               </button>
             ) : <span className="punctuation" key={token.index}>{token.char}</span>)}
           </p>
-          <footer><span>点一下不认识的字</span><i /></footer>
+          <footer><span>读完一遍，再关掉拼音试试看</span><i /></footer>
         </article>
         {selected && <CharacterPopover character={selected} onClose={() => setSelected(undefined)} />}
       </div>

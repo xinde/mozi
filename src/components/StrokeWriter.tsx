@@ -1,5 +1,5 @@
 import HanziWriter from 'hanzi-writer'
-import { Pause, Play, RotateCcw, StepForward } from 'lucide-react'
+import { Pause, Play, RotateCcw } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 interface StrokeWriterProps {
@@ -87,11 +87,8 @@ export function StrokeWriter({ character, size = 220 }: StrokeWriterProps) {
           {playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
           {playing ? '暂停' : '演示笔顺'}
         </button>
-        <button className="icon-button" onClick={() => writerRef.current?.animateCharacter()} aria-label="逐笔演示">
-          <StepForward aria-hidden="true" />
-        </button>
-        <button className="icon-button" onClick={reset} aria-label="重置笔顺">
-          <RotateCcw aria-hidden="true" />
+        <button className="reset-button" onClick={reset} aria-label="重置笔顺">
+          <RotateCcw aria-hidden="true" /> 重置
         </button>
       </div>
     </section>
