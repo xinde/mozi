@@ -6,9 +6,8 @@ import { CharacterPopover } from '../components/CharacterPopover'
 import { InlineHanziText } from '../components/InlineHanziText'
 import { StrokeOrderStrip } from '../components/StrokeOrderStrip'
 import { StrokeWriter } from '../components/StrokeWriter'
-import { curatedPolyphonic } from '../data/polyphonic'
-import { splitDefinitionsByReading } from '../lib/definitions'
 import { getCharacterPinyin, getEntry, loadIdioms, sanitizeSingleHanzi, speak } from '../lib/dictionary'
+import { loadPolyphonicIndex, type PolyphonicGroup } from '../lib/polyphonic'
 import { getRadicalDisplay } from '../lib/radicals'
 import type { DictionaryEntry, IdiomEntry } from '../types'
 
@@ -35,14 +34,17 @@ export function DictionaryPage() {
   const [notFound, setNotFound] = useState(false)
   const [selectedCharacter, setSelectedCharacter] = useState<string>()
   const [selectedReading, setSelectedReading] = useState('')
+  const [polyphonicGroups, setPolyphonicGroups] = useState<PolyphonicGroup[]>([])
 
   useEffect(() => {
     let active = true
-    Promise.all([getEntry(queryChar), loadIdioms()])
-      .then(([nextEntry, idiomIndex]) => {
+    Promise.all([getEntry(queryChar), loadIdioms(), loadPolyphonicIndex()])
+      .then(([nextEntry, idiomIndex, polyphonicIndex]) => {
         if (!active) return
         setEntry(nextEntry)
         setIdioms(idiomIndex[queryChar] ?? [])
+        setPolyphonicGroups(polyphonicIndex[queryChar] ?? [])
+        setSelectedReading('')
         setNotFound(!nextEntry)
         setLoading(false)
       })
@@ -53,15 +55,9 @@ export function DictionaryPage() {
     const value = getCharacterPinyin(queryChar, true)
     return Array.from(new Set(value.split(/\s+/).filter(Boolean)))
   }, [queryChar])
-  const pronunciationDefinitions = useMemo(
-    () => entry ? splitDefinitionsByReading(queryChar, entry.explanation, readings) : [],
-    [entry, queryChar, readings],
-  )
-  const curatedDefinitions = curatedPolyphonic[queryChar] ?? []
-  const availableReadings = curatedDefinitions.length ? curatedDefinitions.map((item) => item.reading) : readings
+  const availableReadings = polyphonicGroups.length ? polyphonicGroups.map((item) => item.reading) : readings
   const activeReading = selectedReading && availableReadings.includes(selectedReading) ? selectedReading : availableReadings[0]
-  const activeDefinition = pronunciationDefinitions.find((group) => group.reading === activeReading)
-  const activeCurated = curatedDefinitions.find((group) => group.reading === activeReading)
+  const activeDefinition = polyphonicGroups.find((group) => group.reading === activeReading)
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -95,7 +91,7 @@ export function DictionaryPage() {
               <span className="eyebrow">读音</span>
               <div className="reading-row">
                 <h2 id="character-title">{activeReading || entry.pinyin}</h2>
-                <button className="sound-button" onClick={() => speak(activeCurated?.examples[0] || queryChar)} aria-label={`按${activeReading}朗读${queryChar}字`}><Volume2 aria-hidden="true" /></button>
+                <button className="sound-button" onClick={() => speak(queryChar)} aria-label={`朗读${queryChar}字，当前读音${activeReading}`}><Volume2 aria-hidden="true" /></button>
               </div>
               <dl className="character-facts">
                 <div><dt>部首</dt><dd>{getRadicalDisplay(entry.radicals)}</dd></div>
@@ -119,12 +115,8 @@ export function DictionaryPage() {
             {availableReadings.length > 1 && <div className="definition-reading-tabs" aria-label="切换释义读音">{availableReadings.map((reading) => (
               <button className={activeReading === reading ? 'active' : ''} key={reading} onClick={() => setSelectedReading(reading)}>{reading}</button>
             ))}</div>}
-            {activeCurated ? <div className="curated-definition">
-              <strong>{activeCurated.summary}</strong>
-              <ol>{activeCurated.meanings.map((meaning) => <li key={meaning}>{meaning}</li>)}</ol>
-              <div className="example-words">{activeCurated.examples.map((example) => <button key={example} onClick={() => speak(example)}>{example}<Volume2 aria-hidden="true" /></button>)}</div>
-            </div> : <div className="definition-copy">{(activeDefinition?.lines ?? cleanExplanation(entry.explanation)).map((line, index) => <p key={`${line}-${index}`}><InlineHanziText text={line} onSelect={setSelectedCharacter} /></p>)}</div>}
-            {activeCurated && <details className="raw-definition"><summary>查看完整词典释义</summary><div className="definition-copy">{cleanExplanation(entry.explanation).map((line, index) => <p key={`${line}-${index}`}><InlineHanziText text={line} onSelect={setSelectedCharacter} /></p>)}</div></details>}
+            <div className="definition-copy">{(activeDefinition?.lines ?? cleanExplanation(entry.explanation)).map((line, index) => <p key={`${line}-${index}`}><InlineHanziText text={line} onSelect={setSelectedCharacter} /></p>)}</div>
+            {activeDefinition && <details className="raw-definition"><summary>查看完整词典释义</summary><div className="definition-copy">{cleanExplanation(entry.explanation).map((line, index) => <p key={`${line}-${index}`}><InlineHanziText text={line} onSelect={setSelectedCharacter} /></p>)}</div></details>}
           </section>
 
           <section className="idiom-section" aria-labelledby="idiom-title">
