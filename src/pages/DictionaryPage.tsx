@@ -6,6 +6,7 @@ import { CharacterPopover } from '../components/CharacterPopover'
 import { InlineHanziText } from '../components/InlineHanziText'
 import { StrokeOrderStrip } from '../components/StrokeOrderStrip'
 import { StrokeWriter } from '../components/StrokeWriter'
+import { curatedPolyphonic } from '../data/polyphonic'
 import { splitDefinitionsByReading } from '../lib/definitions'
 import { getCharacterPinyin, getEntry, loadIdioms, sanitizeSingleHanzi, speak } from '../lib/dictionary'
 import { getRadicalDisplay } from '../lib/radicals'
@@ -56,7 +57,11 @@ export function DictionaryPage() {
     () => entry ? splitDefinitionsByReading(queryChar, entry.explanation, readings) : [],
     [entry, queryChar, readings],
   )
-  const activeDefinition = pronunciationDefinitions.find((group) => group.reading === selectedReading) ?? pronunciationDefinitions[0]
+  const curatedDefinitions = curatedPolyphonic[queryChar] ?? []
+  const availableReadings = curatedDefinitions.length ? curatedDefinitions.map((item) => item.reading) : readings
+  const activeReading = selectedReading && availableReadings.includes(selectedReading) ? selectedReading : availableReadings[0]
+  const activeDefinition = pronunciationDefinitions.find((group) => group.reading === activeReading)
+  const activeCurated = curatedDefinitions.find((group) => group.reading === activeReading)
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -89,8 +94,8 @@ export function DictionaryPage() {
             <div className="character-summary">
               <span className="eyebrow">读音</span>
               <div className="reading-row">
-                <h2 id="character-title">{entry.pinyin || readings.join('、')}</h2>
-                <button className="sound-button" onClick={() => speak(queryChar)} aria-label={`朗读${queryChar}字`}><Volume2 aria-hidden="true" /></button>
+                <h2 id="character-title">{activeReading || entry.pinyin}</h2>
+                <button className="sound-button" onClick={() => speak(activeCurated?.examples[0] || queryChar)} aria-label={`按${activeReading}朗读${queryChar}字`}><Volume2 aria-hidden="true" /></button>
               </div>
               <dl className="character-facts">
                 <div><dt>部首</dt><dd>{getRadicalDisplay(entry.radicals)}</dd></div>
@@ -98,8 +103,8 @@ export function DictionaryPage() {
                 <div><dt>结构</dt><dd>{entry.structure || '结构未知'}</dd></div>
                 {entry.oldword && entry.oldword !== queryChar && <div className="variant-fact"><dt>传统字形</dt><dd>{entry.oldword}</dd></div>}
               </dl>
-              {readings.length > 1 && <div className="reading-chips" aria-label="选择读音">{readings.map((reading) => (
-                <button className={(activeDefinition?.reading ?? readings[0]) === reading ? 'active' : ''} key={reading} onClick={() => setSelectedReading(reading)}>{reading}</button>
+              {availableReadings.length > 1 && <div className="reading-chips" aria-label="选择读音">{availableReadings.map((reading) => (
+                <button className={activeReading === reading ? 'active' : ''} key={reading} onClick={() => setSelectedReading(reading)}>{reading}</button>
               ))}</div>}
             </div>
           </section>
@@ -110,11 +115,16 @@ export function DictionaryPage() {
           </div>
 
           <section className="definition-section" aria-labelledby="definition-title">
-            <div className="section-heading"><div><span className="eyebrow">字典 · 点字可查</span><h2 id="definition-title">{activeDefinition ? `${activeDefinition.reading} 的释义` : '基本释义'}</h2></div></div>
-            {pronunciationDefinitions.length > 1 && <div className="definition-reading-tabs" aria-label="切换释义读音">{pronunciationDefinitions.map((group) => (
-              <button className={activeDefinition?.reading === group.reading ? 'active' : ''} key={group.reading} onClick={() => setSelectedReading(group.reading)}>{group.reading}</button>
+            <div className="section-heading"><div><span className="eyebrow">字典 · 点字可查</span><h2 id="definition-title">{activeReading ? `${activeReading} 的释义` : '基本释义'}</h2></div></div>
+            {availableReadings.length > 1 && <div className="definition-reading-tabs" aria-label="切换释义读音">{availableReadings.map((reading) => (
+              <button className={activeReading === reading ? 'active' : ''} key={reading} onClick={() => setSelectedReading(reading)}>{reading}</button>
             ))}</div>}
-            <div className="definition-copy">{(activeDefinition?.lines ?? cleanExplanation(entry.explanation)).map((line, index) => <p key={`${line}-${index}`}><InlineHanziText text={line} onSelect={setSelectedCharacter} /></p>)}</div>
+            {activeCurated ? <div className="curated-definition">
+              <strong>{activeCurated.summary}</strong>
+              <ol>{activeCurated.meanings.map((meaning) => <li key={meaning}>{meaning}</li>)}</ol>
+              <div className="example-words">{activeCurated.examples.map((example) => <button key={example} onClick={() => speak(example)}>{example}<Volume2 aria-hidden="true" /></button>)}</div>
+            </div> : <div className="definition-copy">{(activeDefinition?.lines ?? cleanExplanation(entry.explanation)).map((line, index) => <p key={`${line}-${index}`}><InlineHanziText text={line} onSelect={setSelectedCharacter} /></p>)}</div>}
+            {activeCurated && <details className="raw-definition"><summary>查看完整词典释义</summary><div className="definition-copy">{cleanExplanation(entry.explanation).map((line, index) => <p key={`${line}-${index}`}><InlineHanziText text={line} onSelect={setSelectedCharacter} /></p>)}</div></details>}
           </section>
 
           <section className="idiom-section" aria-labelledby="idiom-title">

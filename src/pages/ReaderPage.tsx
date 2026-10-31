@@ -15,6 +15,7 @@ export function ReaderPage() {
   const [reading, setReading] = useState(false)
   const [selected, setSelected] = useState<string>()
   const [showPinyin, setShowPinyin] = useState(true)
+  const [textSize, setTextSize] = useState<'small' | 'medium' | 'large'>('medium')
 
   const tokens = useMemo(() => annotateText(readingText), [readingText])
   const hanziCount = useMemo(() => tokens.filter((token) => token.isHanzi).length, [tokens])
@@ -34,7 +35,11 @@ export function ReaderPage() {
           <div><b>注音阅读</b><small>{hanziCount} 个汉字</small></div>
           <button className={`pinyin-switch ${showPinyin ? 'on' : ''}`} onClick={() => setShowPinyin(!showPinyin)} aria-pressed={showPinyin}>拼音</button>
         </header>
-        <article className={`annotated-article ${showPinyin ? '' : 'hide-pinyin'}`} lang="zh-CN">
+        <div className="reader-settings" aria-label="阅读设置">
+          <span>正文字号</span>
+          <div>{([['small', '小'], ['medium', '中'], ['large', '大']] as const).map(([size, label]) => <button className={textSize === size ? 'active' : ''} key={size} onClick={() => setTextSize(size)} aria-pressed={textSize === size}>{label}</button>)}</div>
+        </div>
+        <article className={`annotated-article text-${textSize} ${showPinyin ? '' : 'hide-pinyin'}`} lang="zh-CN">
           <header className="article-header">
             <div className="article-seal" aria-hidden="true">读</div>
             <div><span className="eyebrow">我的注音读本</span><h1>慢慢读，遇见生字就点一下</h1></div>
