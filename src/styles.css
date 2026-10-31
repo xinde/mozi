@@ -95,7 +95,8 @@
   .dictionary-intro, .reader-intro { max-width: 620px; margin-bottom: 38px; }
   .dictionary-intro h1, .reader-intro h1 { margin: 8px 0 12px; font-family: var(--serif); font-size: clamp(32px, 8vw, 48px); line-height: 1.12; font-weight: 700; text-wrap: balance; }
   .dictionary-intro > p, .reader-intro > p { max-width: 52ch; color: var(--ink-muted); font-family: var(--serif); line-height: 1.75; text-wrap: pretty; }
-  .character-search { height: 56px; margin-top: 24px; display: flex; align-items: center; gap: 10px; padding: 6px 7px 6px 16px; background: var(--paper-light); border-radius: 16px; box-shadow: inset 0 0 0 1px rgba(92,67,47,.12), 0 5px 20px rgba(70,45,25,.07); }
+  .dictionary-search-panel { margin-bottom: 24px; }
+  .character-search { height: 56px; margin-top: 0; display: flex; align-items: center; gap: 10px; padding: 6px 7px 6px 16px; background: var(--paper-light); border-radius: 16px; box-shadow: inset 0 0 0 1px rgba(92,67,47,.12), 0 5px 20px rgba(70,45,25,.07); }
   .character-search > svg { width: 20px; color: var(--ink-muted); }
   .character-search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 17px; }
   .character-search input::placeholder { color: color-mix(in oklch, var(--ink-muted) 65%, transparent); }
@@ -106,7 +107,9 @@
   .character-hero { position: relative; display: grid; grid-template-columns: 230px 1fr; gap: 36px; align-items: center; margin: 12px 0 48px; }
   .hero-grid, .writer-stage, .mini-tian { position: relative; overflow: hidden; background-color: var(--paper-light); background-image: linear-gradient(to right, transparent calc(50% - .5px), color-mix(in oklch, var(--cinnabar) 27%, transparent) 50%, transparent calc(50% + .5px)), linear-gradient(to bottom, transparent calc(50% - .5px), color-mix(in oklch, var(--cinnabar) 27%, transparent) 50%, transparent calc(50% + .5px)), linear-gradient(45deg, transparent calc(50% - .5px), color-mix(in oklch, var(--cinnabar) 18%, transparent) 50%, transparent calc(50% + .5px)), linear-gradient(-45deg, transparent calc(50% - .5px), color-mix(in oklch, var(--cinnabar) 18%, transparent) 50%, transparent calc(50% + .5px)); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cinnabar) 32%, transparent); }
   .hero-grid { aspect-ratio: 1; display: grid; place-items: center; border-radius: var(--r-lg); box-shadow: var(--shadow-raised), inset 0 0 0 1px color-mix(in oklch, var(--cinnabar) 32%, transparent); }
-  .hero-grid span { font-family: var(--kai); font-size: 132px; line-height: 1; transform: translateY(5px); }
+  .hero-glyph { position: absolute; inset: 50% auto auto 50%; display: grid; place-items: center; transform: translate(-50%, -50%); line-height: 0; }
+  .hero-glyph svg { display: block; }
+  .hero-glyph-fallback { position: absolute; font-family: var(--kai); font-size: 124px; line-height: 1; }
   .character-summary { min-width: 0; }
   .reading-row { display: flex; align-items: center; gap: 14px; margin: 6px 0 22px; }
   .reading-row h2 { font-family: var(--serif); font-size: 36px; line-height: 1.2; }
@@ -116,6 +119,8 @@
   .character-facts div:first-child { padding-left: 0; border-left: 0; }
   .character-facts dt { color: var(--ink-muted); font-size: 11px; }
   .character-facts dd { font-family: var(--serif); font-size: 16px; font-weight: 700; }
+  .character-facts .variant-fact { grid-column: 1 / -1; grid-template-columns: 68px 1fr; align-items: baseline; gap: 8px; margin-top: 12px; padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--line); }
+  .variant-fact dd { font-family: var(--kai); font-size: 20px; }
   .reading-chips { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
   .reading-chips span { padding: 6px 10px; background: var(--cinnabar-soft); color: var(--cinnabar-dark); border-radius: var(--r-pill); font-size: 13px; }
   .learning-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 52px; }
@@ -233,7 +238,7 @@
     .app-header { padding-inline: 16px; }
     .dictionary-intro, .reader-intro { margin-bottom: 30px; }
     .character-hero { grid-template-columns: 148px 1fr; gap: 20px; }
-    .hero-grid span { font-size: 90px; }
+    .hero-glyph { transform: translate(-50%, -50%) scale(.7); }
     .reading-row { margin-bottom: 14px; }
     .reading-row h2 { font-size: 28px; }
     .character-facts { grid-template-columns: repeat(2, 1fr); gap: 12px 0; }
@@ -246,7 +251,7 @@
     .offline-mark { font-size: 0; }
     .offline-mark i { margin-right: 3px; }
     .character-hero { grid-template-columns: 128px 1fr; gap: 16px; }
-    .hero-grid span { font-size: 78px; }
+    .hero-glyph { transform: translate(-50%, -50%) scale(.62); }
     .reading-row h2 { font-size: 24px; }
     .character-facts dd { font-size: 14px; }
     .editor-sheet { padding: 20px 18px; }
@@ -267,7 +272,7 @@
   @media (max-width: 350px) {
     .page { width: calc(100% - 24px); }
     .character-hero { grid-template-columns: 112px 1fr; }
-    .hero-grid span { font-size: 68px; }
+    .hero-glyph { transform: translate(-50%, -50%) scale(.54); }
     .quick-characters button:nth-last-child(-n+2) { display: none; }
     .article-copy { font-size: 21px; }
     .reading-guide { font-size: 11px; }

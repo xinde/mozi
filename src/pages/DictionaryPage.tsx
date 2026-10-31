@@ -1,11 +1,13 @@
 import { Search, Volume2 } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { CharacterGlyph } from '../components/CharacterGlyph'
 import { CharacterPopover } from '../components/CharacterPopover'
 import { InlineHanziText } from '../components/InlineHanziText'
 import { StrokeOrderStrip } from '../components/StrokeOrderStrip'
 import { StrokeWriter } from '../components/StrokeWriter'
 import { getCharacterPinyin, getEntry, loadIdioms, sanitizeSingleHanzi, speak } from '../lib/dictionary'
+import { getRadicalDisplay } from '../lib/radicals'
 import type { DictionaryEntry, IdiomEntry } from '../types'
 
 const examples = ['春', '学', '家', '爱', '山', '明']
@@ -58,10 +60,7 @@ export function DictionaryPage() {
 
   return (
     <div className="page dictionary-page">
-      <section className="dictionary-intro">
-        <span className="eyebrow">随身小字典</span>
-        <h1>从一笔一画，认识一个字</h1>
-        <p>输入汉字，查读音、部首、笔顺、释义和相关成语。</p>
+      <section className="dictionary-intro dictionary-search-panel">
         <form className="character-search" onSubmit={submit}>
           <label className="sr-only" htmlFor="character-input">输入一个汉字</label>
           <Search aria-hidden="true" />
@@ -79,7 +78,7 @@ export function DictionaryPage() {
       ) : entry && (
         <>
           <section className="character-hero" aria-labelledby="character-title">
-            <div className="hero-grid"><span lang="zh">{queryChar}</span></div>
+            <div className="hero-grid"><CharacterGlyph character={queryChar} /></div>
             <div className="character-summary">
               <span className="eyebrow">读音</span>
               <div className="reading-row">
@@ -87,9 +86,10 @@ export function DictionaryPage() {
                 <button className="sound-button" onClick={() => speak(queryChar)} aria-label={`朗读${queryChar}字`}><Volume2 aria-hidden="true" /></button>
               </div>
               <dl className="character-facts">
-                <div><dt>部首</dt><dd>{entry.radicals || '未知'}</dd></div>
+                <div><dt>部首</dt><dd>{getRadicalDisplay(entry.radicals)}</dd></div>
                 <div><dt>笔画</dt><dd>{entry.strokes || '未知'} 画</dd></div>
                 <div><dt>结构</dt><dd>{entry.structure || '结构未知'}</dd></div>
+                {entry.oldword && entry.oldword !== queryChar && <div className="variant-fact"><dt>传统字形</dt><dd>{entry.oldword}</dd></div>}
               </dl>
               {readings.length > 1 && <div className="reading-chips">{readings.map((reading) => <span key={reading}>{reading}</span>)}</div>}
             </div>
